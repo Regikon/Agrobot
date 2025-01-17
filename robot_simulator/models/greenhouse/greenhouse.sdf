@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<sdf version="1.11">
+  <model name="greenhouse">
+    <!-- Give the base link a unique name -->
+    <pose>0 0 0 0 0 0</pose>
+    <static>true</static>
+    <link name="greenhouse_base">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>meshes/greenhouse.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="base_collision">
+        <geometry>
+          <mesh>
+            <uri>meshes/greenhouse.obj</uri>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,3 @@
+<launch>
+<node name="servo" pkg="agro" type="motor_manager.py" output="screen"/>
+</launch>

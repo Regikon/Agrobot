@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+	<world name="robot_control">
+		<!-- <include> -->
+		<!--     <uri>model://sun</uri> -->
+		<!--  </include> -->
+		<!--  <include> -->
+		<!--     <uri>model://ground_plane</uri>  -->
+		<!--  </include> -->
+
+		<include>
+			<uri>robot.sdf</uri>
+		</include>
+		<include>
+			<uri>models/greenhouse_mini</uri>
+			<pose>1 -2 0 0 0 -1.5708</pose>
+		</include>
+	</world>
+</sdf>

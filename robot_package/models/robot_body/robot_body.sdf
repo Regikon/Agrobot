@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="body">
+    <!-- Give the base link a unique name -->
+    <!-- <pose>0 0.4796 0 0 0 0</pose> -->
+    <pose>0 0 0 0 0 0</pose>
+    <link name="base">
+      <inertial>
+        <mass>60.0</mass>
+          <inertia>
+              <ixx>18.889</ixx>
+              <iyy>15.40</iyy>
+              <izz>24.8</izz>
+              <ixy>12.28</ixy>
+              <ixz>7.11</ixz>
+              <iyz>8.19</iyz>
+          </inertia>
+      </inertial>
+
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>model://agro/models/robot_body/meshes/robot_body.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="base_collision">
+        <geometry>
+          <mesh>
+            <uri>model://agro/models/robot_body/meshes/robot_body.obj</uri>
+          </mesh>
+        </geometry>
+        <!-- <surface>
+          <friction>
+            <ode>
+              <mu>0.0</mu>
+              <mu2>0.0</mu2>
+            </ode>
+          </friction>
+        </surface> -->
+      </collision>
+    </link>
+
+  </model>
+</sdf>

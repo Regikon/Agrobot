@@ -1,0 +1,3 @@
+<launch>
+<node name="vision_node" pkg="agro" type="vision_node" output="screen"/>
+</launch>

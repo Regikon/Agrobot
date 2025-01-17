@@ -1,0 +1,10 @@
+string name
+string error
+int32 temperature
+int32 voltage
+int32 torque
+int32 speed
+int32 pos
+int32 phase_A_current
+int32 phase_B_current
+int32 phase_C_current

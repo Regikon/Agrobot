@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="mecanum_wheel_left">
+    <!-- Give the base link a unique name -->
+    <gravity>true</gravity>
+    <pose>0 0 0 0 0 0</pose>
+    <link name="base">
+      <inertial>
+        <mass>0.6</mass>
+          <inertia>
+            <ixx>0.02</ixx>
+            <iyy>0.02</iyy>
+            <izz>0.02</izz>
+            <ixy>0.01</ixy>
+            <ixz>0.01</ixz>
+            <iyz>0.01</iyz>
+          </inertia>
+      </inertial>
+
+      <collision name="base_collision">
+        <geometry>
+          <mesh>
+            <uri>model://agro/models/mecanum_wheel_left/meshes/mecanum_wheel.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.00</mu>
+              <mu2>0.00</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>model://agro/models/mecanum_wheel_left/meshes/mecanum_wheel.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
