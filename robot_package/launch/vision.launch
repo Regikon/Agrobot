@@ -1,8 +1,0 @@
-<launch>
-
-<node name="realsense" pkg="agro" type="rgbd_manager.py" output="screen"/>
-<node name="jabra" pkg="agro" type="jabra_manager.py" output="screen"/>
-
-<node name="tomato" pkg="agro" type="tomato_baseline.py" output="screen"/>
-<node name="hand_cmd" pkg="agro" type="hand_tracking.py" output="screen"/>
-</launch>

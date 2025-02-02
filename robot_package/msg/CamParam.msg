@@ -1,4 +1,0 @@
-IMU imu
-Intrinsic color_intrinsic
-Intrinsic depth_intrinsic
-Extrinsic extrinsic

@@ -1,2 +1,0 @@
-Gyro gyro
-Accel accel
