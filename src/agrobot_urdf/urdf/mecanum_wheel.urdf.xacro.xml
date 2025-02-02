@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
@@ -13,16 +13,25 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj" scale="1 1 1" />
+          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj"
+            scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj" scale="1 1 1" />
+          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj"
+            scale="1 1 1" />
         </geometry>
       </collision>
     </link>
+
+    <joint name="${name}_fixed_rotational_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="${name}_fixed_link" />
+      <axis xyz="0 0 1" />
+    </joint>
 
   </xacro:macro>
 

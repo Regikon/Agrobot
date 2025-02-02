@@ -4,24 +4,14 @@ from glob import glob
 
 package_name = "agrobot_urdf"
 
-
-def copy_dir():
-    dir_path = "meshes"
-    base_dir = os.path.join(package_name, dir_path)
-    for dirpath, dirnames, files in os.walk(base_dir):
-        for f in files:
-            yield os.path.join(dirpath.split("/", 1)[1], f)
-
-
 data_files = [
     ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
     ("share/" + package_name, ["package.xml"]),
     (os.path.join("share", package_name, "urdf"), glob("urdf/*")),
+    (os.path.join("share", package_name, "meshes", "robot_body"), glob("meshes/robot_body/*")),
+    (os.path.join("share", package_name, "meshes", "mecanum_wheel"), glob("meshes/mecanum_wheel/*")),
+    (os.path.join("share", package_name, "meshes", "rail_wheel"), glob("meshes/rail_wheel/*")),
 ]
-for f in copy_dir():
-    data_files.append(f)
-
-print(data_files)
 
 setup(
     name=package_name,

@@ -1,6 +1,48 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki.xacro" name="agrobot">
+  <!--includes-->
   <xacro:include filename="$(find agrobot_urdf)/urdf/robot_body.urdf.xacro.xml" />
+  <xacro:include filename="$(find agrobot_urdf)/urdf/mecanum_wheel.urdf.xacro.xml" />
+  <!--<xacro:include
+  filename="$(find agrobot_urdf)/urdf/rail_wheel.urdf.xacro.xml" />-->
 
-  <xacro:robot_body name="agrobot_body" />
+  <!--properties-->
+  <xacro:property name="wheel_radius" value="0.100" />
+  <xacro:property name="wheel_base_height" value="0.100" />
+  <xacro:property name="mecanum_wheel_base_x" value="0.320" />
+  <xacro:property name="mecanum_wheel_base_y" value="0.3575" />
+
+  <link name="base_footprint" />
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+    <origin xyz="0.0 0.0 ${(wheel_radius) + (wheel_base_height)}" />
+  </joint>
+
+
+  <xacro:robot_body name="base" />
+  <xacro:mecanum_wheel
+    name="mecanum_wheel_fr" parent="base_link">
+    <origin xyz="${mecanum_wheel_base_x} ${-mecanum_wheel_base_y} ${-wheel_base_height}"
+      rpy="${pi/2} 0 0" />
+  </xacro:mecanum_wheel>
+
+  <xacro:mecanum_wheel
+    name="mecanum_wheel_fl" parent="base_link">
+    <origin xyz="${mecanum_wheel_base_x} ${mecanum_wheel_base_y} ${-wheel_base_height}"
+      rpy="${-pi/2} 0 0" />
+  </xacro:mecanum_wheel>
+
+  <xacro:mecanum_wheel
+    name="mecanum_wheel_rr" parent="base_link">
+    <origin xyz="${-mecanum_wheel_base_x} ${-mecanum_wheel_base_y} ${-wheel_base_height}"
+      rpy="${pi/2} 0 0" />
+  </xacro:mecanum_wheel>
+
+  <xacro:mecanum_wheel
+    name="mecanum_wheel_rl" parent="base_link">
+    <origin xyz="${-mecanum_wheel_base_x} ${mecanum_wheel_base_y} ${-wheel_base_height}"
+      rpy="${-pi/2} 0 0" />
+  </xacro:mecanum_wheel>
+
 </robot>
