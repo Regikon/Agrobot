@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="rail_wheel" params="name parent *origin">
+    <link name="${name}_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.8" />
+        <inertia ixx="0.003" iyy="0.003" izz="0.003" ixy="0.002" ixz="0.002" iyz="0.002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://agrobot_urdf/meshes/rail_wheel/rail_wheel.obj" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://agrobot_urdf/meshes/rail_wheel/rail_wheel.obj" scale="1 1 1" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${name}_fixed_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}_link" />
+      <child link="${name}_link" />
+    </joint>
+  </xacro:macro>
+</robot>
