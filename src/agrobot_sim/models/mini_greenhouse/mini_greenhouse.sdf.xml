@@ -7,14 +7,14 @@
       <visual name="base_visual">
         <geometry>
           <mesh>
-            <uri>meshes/mini_greenhouse/mini_greenhouse.obj</uri>
+            <uri>meshes/mini_greenhouse/mini_greenhouse.dae</uri>
           </mesh>
         </geometry>
       </visual>
       <collision name="base_collision">
         <geometry>
           <mesh>
-            <uri>meshes/mini_greenhouse/mini_greenhouse.obj</uri>
+            <uri>meshes/mini_greenhouse/mini_greenhouse.dae</uri>
           </mesh>
         </geometry>
       </collision>
