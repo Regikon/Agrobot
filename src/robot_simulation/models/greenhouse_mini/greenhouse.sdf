@@ -1,25 +1,15 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="rail_wheel">
+  <model name="greenhouse_mini">
     <!-- Give the base link a unique name -->
     <pose>0 0 0 0 0 0</pose>
+    <static>true</static>
     <link name="base">
-      <inertial>
-        <mass>0.8</mass>
-          <inertia>
-            <ixx>0.003</ixx>
-            <iyy>0.003</iyy>
-            <izz>0.003</izz>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyz>0</iyz>
-          </inertia>
-      </inertial>
       
       <visual name="base_visual">
         <geometry>
           <mesh>
-            <uri>meshes/rail_wheel.obj</uri>
+            <uri>model://robot_simulation/models/greenhouse_mini/meshes/greenhouse_mini.obj</uri>
           </mesh>
         </geometry>
       </visual>
@@ -27,7 +17,7 @@
       <collision name="base_collision">
         <geometry>
           <mesh>
-            <uri>meshes/rail_wheel.obj</uri>
+            <uri>model://robot_simulation/models/greenhouse_mini/meshes/greenhouse_mini.obj</uri>
           </mesh>
         </geometry>
       </collision>

@@ -6,20 +6,20 @@
     <link name="base">
       <inertial>
         <mass>0.6</mass>
-        <inertia>
-          <ixx>0.02</ixx>
-          <iyy>0.02</iyy>
-          <izz>0.02</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
+          <inertia>
+            <ixx>0.02</ixx>
+            <iyy>0.02</iyy>
+            <izz>0.02</izz>
+            <ixy>0.01</ixy>
+            <ixz>0.01</ixz>
+            <iyz>0.01</iyz>
+          </inertia>
       </inertial>
 
       <collision name="base_collision">
         <geometry>
           <mesh>
-            <uri>meshes/mecanum_wheel.obj</uri>
+            <uri>model://robot_simulation/models/mecanum_wheel/meshes/mecanum_wheel.obj</uri>
           </mesh>
         </geometry>
       </collision>
@@ -27,7 +27,7 @@
       <visual name="base_visual">
         <geometry>
           <mesh>
-            <uri>meshes/mecanum_wheel.obj</uri>
+            <uri>model://robot_simulation/models/mecanum_wheel/meshes/mecanum_wheel.obj</uri>
           </mesh>
         </geometry>
       </visual>

@@ -1,27 +1,23 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <sdf version="1.5">
-  <model name="greenhouse_mini">
-    <!-- Give the base link a unique name -->
+  <model name="mini_greenhouse">
     <pose>0 0 0 0 0 0</pose>
     <static>true</static>
     <link name="base">
-
       <visual name="base_visual">
         <geometry>
           <mesh>
-            <uri>meshes/greenhouse_mini.obj</uri>
+            <uri>meshes/mini_greenhouse/mini_greenhouse.obj</uri>
           </mesh>
         </geometry>
       </visual>
-
       <collision name="base_collision">
         <geometry>
           <mesh>
-            <uri>meshes/greenhouse_mini.obj</uri>
+            <uri>meshes/mini_greenhouse/mini_greenhouse.obj</uri>
           </mesh>
         </geometry>
       </collision>
     </link>
-
   </model>
 </sdf>
