@@ -18,7 +18,7 @@ def generate_launch_description():
     world_arg = DeclareLaunchArgument(
             'world',
             default_value='mini_greenhouse',
-            choices=['mini_greenhouse'],
+            choices=['empty', 'mini_greenhouse'],
             description='World to load into Gazebo'
     )
 
