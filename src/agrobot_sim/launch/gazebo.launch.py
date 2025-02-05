@@ -13,7 +13,7 @@ def generate_launch_description():
     gz_launch_path = PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
     gz_spawn_path = PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_spawn_model.launch.py'])
     world_model_path = PathJoinSubstitution([pkg_agrobot_sim])
-    robot_urdf_path = PathJoinSubstitution([pkg_agrobot_urdf, 'urdf', 'robot.urdf.xacro.xml'])
+    robot_urdf_path = PathJoinSubstitution([pkg_agrobot_urdf, 'urdf', 'robot', 'robot.urdf.xacro.xml'])
 
     world_arg = DeclareLaunchArgument(
             'world',

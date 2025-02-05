@@ -7,7 +7,10 @@ package_name = "agrobot_urdf"
 data_files = [
     ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
     ("share/" + package_name, ["package.xml"]),
-    (os.path.join("share", package_name, "urdf"), glob("urdf/*")),
+    (os.path.join("share", package_name, "urdf", "robot_body"), glob("urdf/robot_body/*")),
+    (os.path.join("share", package_name, "urdf", "rail_wheel"), glob("urdf/rail_wheel/*")),
+    (os.path.join("share", package_name, "urdf", "mecanum_wheel"), glob("urdf/mecanum_wheel/*")),
+    (os.path.join("share", package_name, "urdf", "robot"), glob("urdf/robot/*")),
     (os.path.join("share", package_name, "meshes", "robot_body"), glob("meshes/robot_body/*")),
     (os.path.join("share", package_name, "meshes", "mecanum_wheel"), glob("meshes/mecanum_wheel/*")),
     (os.path.join("share", package_name, "meshes", "rail_wheel"), glob("meshes/rail_wheel/*")),

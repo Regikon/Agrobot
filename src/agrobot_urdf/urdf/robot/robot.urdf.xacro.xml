@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki.xacro" name="agrobot">
   <!--includes-->
-  <xacro:include filename="$(find agrobot_urdf)/urdf/robot_body.urdf.xacro.xml" />
-  <xacro:include filename="$(find agrobot_urdf)/urdf/mecanum_wheel.urdf.xacro.xml" />
+  <xacro:include filename="$(find agrobot_urdf)/urdf/robot_body/robot_body.urdf.xacro.xml" />
+  <xacro:include filename="$(find agrobot_urdf)/urdf/mecanum_wheel/mecanum_wheel.urdf.xacro.xml" />
   <xacro:include
-    filename="$(find agrobot_urdf)/urdf/rail_wheel.urdf.xacro.xml" />
+    filename="$(find agrobot_urdf)/urdf/rail_wheel/rail_wheel.urdf.xacro.xml" />
 
   <!--properties-->
   <xacro:property name="wheel_radius" value="0.100" />
