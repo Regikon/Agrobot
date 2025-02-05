@@ -14,6 +14,7 @@ data_files = [
     (os.path.join("share", package_name, "meshes", "robot_body"), glob("meshes/robot_body/*")),
     (os.path.join("share", package_name, "meshes", "mecanum_wheel"), glob("meshes/mecanum_wheel/*")),
     (os.path.join("share", package_name, "meshes", "rail_wheel"), glob("meshes/rail_wheel/*")),
+    (os.path.join("share", package_name, "config"), glob("config/*")),
 ]
 
 setup(

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include
+    filename="$(find agrobot_urdf)/urdf/mecanum_wheel/mecanum_wheel.ros2_control.urdf.xacro.xml" />
+
+  <xacro:macro name="robot_ros2_control">
+    <ros2_control name="GazeboSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <xacro:mecanum_wheel_ros2_control name="mecanum_wheel_fr" />
+      <xacro:mecanum_wheel_ros2_control name="mecanum_wheel_fl" />
+      <xacro:mecanum_wheel_ros2_control name="mecanum_wheel_rr" />
+      <xacro:mecanum_wheel_ros2_control name="mecanum_wheel_rl" />
+    </ros2_control>
+  </xacro:macro>
+  <gazebo>
+    <plugin filename="libgz_ros2_control-system.so"
+      name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find agrobot_urdf)/config/ros2_control.yaml</parameters>
+      <controller_manager_prefix_node_name>controller_manager</controller_manager_prefix_node_name>
+    </plugin>
+  </gazebo>
+</robot>
