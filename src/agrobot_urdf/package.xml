@@ -7,7 +7,7 @@
   <maintainer email="ilyaandry35@gmail.com">Ilya Andriyanov</maintainer>
   <license>Apache-2.0</license>
 
-  <depend>rclpy</depend>
+  <depend>rviz2</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
