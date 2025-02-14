@@ -2,7 +2,7 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="mecanum_wheel" params="name parent *origin">
+  <xacro:macro name="mecanum_wheel" params="name parent *origin side">
 
     <link name="${name}_link">
       <inertial>
@@ -13,14 +13,14 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj"
+          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel_${side}.obj"
             scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel.obj"
+          <mesh filename="package://agrobot_urdf/meshes/mecanum_wheel/mecanum_wheel_${side}.obj"
             scale="1 1 1" />
         </geometry>
       </collision>

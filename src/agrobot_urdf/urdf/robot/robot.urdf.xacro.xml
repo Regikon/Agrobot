@@ -26,7 +26,7 @@
   <xacro:robot_body name="base" />
 
   <xacro:mecanum_wheel
-    name="mecanum_wheel_fr" parent="base_link">
+    name="mecanum_wheel_fr" parent="base_link" side="right">
     <origin xyz="${mecanum_wheel_base_x} ${-mecanum_wheel_base_y} ${-wheel_base_height}"
       rpy="${pi/2} 0 0" />
   </xacro:mecanum_wheel>
@@ -35,16 +35,16 @@
   </xacro:rail_wheel>
 
   <xacro:mecanum_wheel
-    name="mecanum_wheel_fl" parent="base_link">
+    name="mecanum_wheel_fl" parent="base_link" side="left">
     <origin xyz="${mecanum_wheel_base_x} ${mecanum_wheel_base_y} ${-wheel_base_height}"
-      rpy="${-pi/2} 0 0" />
+      rpy="${pi/2} 0 0" />
   </xacro:mecanum_wheel>
   <xacro:rail_wheel name="rail_wheel_fl" parent="mecanum_wheel_fl">
     <origin xyz="0 0 ${-wheel_base_length}" />
   </xacro:rail_wheel>
 
   <xacro:mecanum_wheel
-    name="mecanum_wheel_rr" parent="base_link">
+    name="mecanum_wheel_rr" parent="base_link" side="right">
     <origin xyz="${-mecanum_wheel_base_x} ${-mecanum_wheel_base_y} ${-wheel_base_height}"
       rpy="${pi/2} 0 0" />
   </xacro:mecanum_wheel>
@@ -53,9 +53,9 @@
   </xacro:rail_wheel>
 
   <xacro:mecanum_wheel
-    name="mecanum_wheel_rl" parent="base_link">
+    name="mecanum_wheel_rl" parent="base_link" side="left">
     <origin xyz="${-mecanum_wheel_base_x} ${mecanum_wheel_base_y} ${-wheel_base_height}"
-      rpy="${-pi/2} 0 0" />
+      rpy="${pi/2} 0 0" />
   </xacro:mecanum_wheel>
   <xacro:rail_wheel name="rail_wheel_rl" parent="mecanum_wheel_rl">
     <origin xyz="0 0 ${-wheel_base_length}" />
