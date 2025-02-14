@@ -2,10 +2,15 @@
 #include <chrono>
 #include <controller_interface/controller_interface.hpp>
 #include <controller_interface/controller_interface_base.hpp>
+#include <cstdio>
+#include <exception>
 #include <memory>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "pluginlib/class_list_macros.hpp"
 
 namespace agrobot_controller {
 
@@ -31,12 +36,6 @@ AgrobotController::AgrobotController()
     : controller_interface::ControllerInterface() {}
 
 controller_interface::CallbackReturn AgrobotController::on_init() {
-  controller_interface::CallbackReturn parent_init_result =
-      controller_interface::ControllerInterface::on_init();
-  if (parent_init_result != controller_interface::CallbackReturn::SUCCESS) {
-    return parent_init_result;
-  }
-
   try {
     // Interface names
     auto_declare<std::string>(kFlWheelParam, std::string());
@@ -109,24 +108,27 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
   }
 
   // Configuring vel_cmd subscriber
-  last_cmd_vel_message_ptr_.set(std::make_shared<geometry_msgs::msg::Twist>(
-      new geometry_msgs::msg::Twist));
-  previous_cmd_commands_.emplace(geometry_msgs::msg::Twist{});
-  previous_cmd_commands_.emplace(geometry_msgs::msg::Twist{});
+  const geometry_msgs::msg::TwistStamped empty_twist;
+  last_cmd_vel_message_ptr_.set(
+      std::make_shared<geometry_msgs::msg::TwistStamped>(empty_twist));
+  previous_cmd_commands_.emplace(empty_twist);
+  previous_cmd_commands_.emplace(empty_twist);
 
-  vel_cmd_subscriber_ = node->create_subscription<geometry_msgs::msg::Twist>(
-      kVelCmdTopic, rclcpp::SystemDefaultsQoS(),
-      [this](const std::shared_ptr<geometry_msgs::msg::Twist> msg) -> void {
-        if (!vel_cmd_subscriber_is_active) {
-          RCLCPP_WARN(this->get_node()->get_logger(),
-                      "Can't accept new commands. Subscriber is inactive");
-          return;
-        }
+  vel_cmd_subscriber_ =
+      node->create_subscription<geometry_msgs::msg::TwistStamped>(
+          kVelCmdTopic, rclcpp::SystemDefaultsQoS(),
+          [this](const std::shared_ptr<geometry_msgs::msg::TwistStamped> msg)
+              -> void {
+            if (!vel_cmd_subscriber_is_active_) {
+              RCLCPP_WARN(this->get_node()->get_logger(),
+                          "Can't accept new commands. Subscriber is inactive");
+              return;
+            }
 
-        std::shared_ptr<geometry_msgs::msg::Twist> twist;
-        last_cmd_vel_message_ptr_.get(twist);
-        twist = msg;
-      });
+            std::shared_ptr<geometry_msgs::msg::TwistStamped> twist;
+            last_cmd_vel_message_ptr_.get(twist);
+            twist = msg;
+          });
   previous_timestamp_ = node->get_clock()->now();
 
   RCLCPP_INFO(logger, "Configuring done");
@@ -170,6 +172,36 @@ controller_interface::CallbackReturn AgrobotController::on_activate(
     const rclcpp_lifecycle::State&) {
   auto logger = this->get_node()->get_logger();
   RCLCPP_INFO(logger, "activation stage");
+
+  try {
+    const auto fr_wheel_result = configure_wheel(fr_wheel_, fr_wheel_handle_);
+    const auto fl_wheel_result = configure_wheel(fl_wheel_, fl_wheel_handle_);
+    const auto rr_wheel_result = configure_wheel(rr_wheel_, rr_wheel_handle_);
+    const auto rl_wheel_result = configure_wheel(rl_wheel_, rl_wheel_handle_);
+
+    if (fr_wheel_result == controller_interface::CallbackReturn::ERROR ||
+        fl_wheel_result == controller_interface::CallbackReturn::ERROR ||
+        rr_wheel_result == controller_interface::CallbackReturn::ERROR ||
+        rl_wheel_result == controller_interface::CallbackReturn::ERROR) {
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(logger, "activation error.");
+    fprintf(stderr,
+            "Exception thrown during activate stage with message: %s \n",
+            e.what());
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  vel_cmd_subscriber_is_active_ = true;
+  is_halted_ = false;
+
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn AgrobotController::on_deactivate(
+    const rclcpp_lifecycle::State&) {
+  vel_cmd_subscriber_is_active_ = false;
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -192,8 +224,106 @@ controller_interface::CallbackReturn AgrobotController::configure_wheel(
 
     if (state_handle == state_interfaces_.cend()) {
       RCLCPP_ERROR(logger, "Unable to obtain joint ");
+      return CallbackReturn::ERROR;
+    }
+
+    const auto command_handle = std::find_if(
+        command_interfaces_.begin(), command_interfaces_.end(),
+        [&wheel_name](const auto& interface) {
+          return interface.get_name() == wheel_name &&
+                 interface.get_interface_name() == kVelHardwareInterfaceType;
+        });
+
+    if (command_handle == command_interfaces_.end()) {
+      RCLCPP_ERROR(logger, "Unable to obtain joint command handle for %s",
+                   wheel_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+
+    registered_handle = new AgrobotController::WheelHandle{
+        std::ref(*state_handle), std::ref(*command_handle)};
+
+  } catch (const std::exception& e) {
+    fprintf(stderr,
+            "Exception thrown during configuring wheel with message: %s \n",
+            e.what());
+    return controller_interface::CallbackReturn::ERROR;
+  }
+  return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::return_type AgrobotController::update(
+    const rclcpp::Time& time, const rclcpp::Duration& period) {
+  auto logger = this->get_node()->get_logger();
+  const auto current_time = time;
+
+  const auto state = get_lifecycle_state().id();
+  if (state == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    if (!is_halted_) {
+      halt();
+      is_halted_ = true;
+    }
+    return controller_interface::return_type::OK;
+  }
+
+  std::shared_ptr<geometry_msgs::msg::TwistStamped> last_command_msg;
+  last_cmd_vel_message_ptr_.get(last_command_msg);
+
+  if (last_command_msg == nullptr) {
+    RCLCPP_WARN(logger, "Velocity command message received was a nullptr.");
+    return controller_interface::return_type::ERROR;
+  }
+
+  const auto age_of_last_command =
+      current_time - last_command_msg->header.stamp;
+  if (age_of_last_command > cmd_vel_timeout_) {
+    last_command_msg->twist.linear.x = 0.0;
+    last_command_msg->twist.linear.y = 0.0;
+    last_command_msg->twist.linear.z = 0.0;
+  }
+
+  geometry_msgs::msg::TwistStamped command = *last_command_msg;
+  auto v_x = command.twist.linear.x;
+  auto v_y = command.twist.linear.y;
+  auto w_z = command.twist.angular.z;
+
+  std::array<double, 4> w;
+  w[0] = fr_wheel_handle_->velocity_feedback.get().get_value();
+  w[1] = fl_wheel_handle_->velocity_feedback.get().get_value();
+  w[2] = rl_wheel_handle_->velocity_feedback.get().get_value();
+  w[3] = rr_wheel_handle_->velocity_feedback.get().get_value();
+
+  for (int i = 0; i != w.size(); ++i) {
+    if (std::isnan(w[i])) {
+      RCLCPP_ERROR(logger, "One of the wheel values is invalid.");
+      return controller_interface::return_type::ERROR;
     }
   }
+
+  // Place to do odometry
+
+  const auto r = params_.wheel_radius;
+  const auto H = params_.axes_gap;
+  const auto B = params_.wheel_base;
+
+  w[0] = 1 / r * (v_x - v_y) + (H - B) / 2 * w_z;
+  w[1] = 1 / r * (v_x + v_y) + (H + B) / 2 * w_z;
+  w[2] = 1 / r * (v_x + v_y) - (H - B) / 2 * w_z;
+  w[3] = 1 / r * (v_x - v_y) - (H + B) / 2 * w_z;
+
+  if (!fr_wheel_handle_->velocity_cmd.get().set_value(w[0]) ||
+      !fl_wheel_handle_->velocity_cmd.get().set_value(w[1]) ||
+      !rl_wheel_handle_->velocity_cmd.get().set_value(w[2]) ||
+      !rr_wheel_handle_->velocity_cmd.get().set_value(w[3])) {
+    RCLCPP_ERROR(logger,
+                 "failed when tried to write to wheel command interfaces");
+    return controller_interface::return_type::ERROR;
+  }
+
+  return controller_interface::return_type::OK;
 }
 
 }  // namespace agrobot_controller
+
+PLUGINLIB_EXPORT_CLASS(agrobot_controller::AgrobotController,
+                       controller_interface::ControllerInterface);

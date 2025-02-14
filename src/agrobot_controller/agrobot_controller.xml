@@ -1,0 +1,8 @@
+<library path="agrobot_controller">
+  <class name="agrobot_controller/AgrobotController" type="agrobot_controller::AgrobotController"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      The mecanum drive velocity controller used with agrobot.
+    </description>
+  </class>
+</library>

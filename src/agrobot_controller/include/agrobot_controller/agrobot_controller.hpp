@@ -8,7 +8,7 @@
 #include <rclcpp/subscription.hpp>
 #include <string>
 #include "controller_interface/controller_interface.hpp"
-#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include "realtime_tools/realtime_box.hpp"
 
 namespace agrobot_controller {
@@ -56,15 +56,17 @@ class AgrobotController : public controller_interface::ControllerInterface {
   rclcpp::Time previous_timestamp_;
 
   std::chrono::milliseconds cmd_vel_timeout_{200};
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
       vel_cmd_subscriber_ = nullptr;
-  realtime_tools::RealtimeBox<std::shared_ptr<geometry_msgs::msg::Twist>>
+  realtime_tools::RealtimeBox<std::shared_ptr<geometry_msgs::msg::TwistStamped>>
       last_cmd_vel_message_ptr_{nullptr};
-  std::queue<geometry_msgs::msg::Twist> previous_cmd_commands_;
-  bool vel_cmd_subscriber_is_active = false;
+  std::queue<geometry_msgs::msg::TwistStamped> previous_cmd_commands_;
+  bool vel_cmd_subscriber_is_active_ = false;
+
+  bool is_halted_ = true;
 
   struct WheelHandle {
-    std::reference_wrapper<hardware_interface::LoanedStateInterface>
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface>
         velocity_feedback;
     std::reference_wrapper<hardware_interface::LoanedCommandInterface>
         velocity_cmd;
@@ -75,7 +77,10 @@ class AgrobotController : public controller_interface::ControllerInterface {
   WheelHandle* rr_wheel_handle_{nullptr};
 
   controller_interface::CallbackReturn configure_wheel(
-      const std::string& wheel_name, WheelHandle*& registered_handle)
+      const std::string& wheel_name, WheelHandle*& registered_handle);
+
+  bool reset();
+  void halt();
 };
 
 }  // namespace agrobot_controller
