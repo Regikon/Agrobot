@@ -6,9 +6,13 @@
 #include <rclcpp/duration.hpp>
 #include <rclcpp/subscription.hpp>
 #include <string>
+#include "agrobot_controller/agrobot_odometry.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "realtime_tools/realtime_box.hpp"
+#include "realtime_tools/realtime_publisher.hpp"
+#include "tf2_ros/transform_broadcaster.h"
 
 namespace agrobot_controller {
 
@@ -79,6 +83,22 @@ class AgrobotController : public controller_interface::ControllerInterface {
 
   bool reset();
   void halt();
+
+  struct OdometryParams {
+    bool open_loop = false;
+    bool position_feedback = false;
+    bool enable_odom_tf = true;
+    std::string base_frame_id = "base_footprint";
+    std::string odom_frame_id = "odom";
+  } odom_params_;
+
+  AgrobotOdometry odometry_;
+
+  std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>>
+      realtime_odometry_publisher_ = nullptr;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> odom_transform_broadcaster_ =
+      nullptr;
+  geometry_msgs::msg::TransformStamped tr_msg_;
 };
 
 }  // namespace agrobot_controller

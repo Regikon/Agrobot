@@ -7,10 +7,17 @@
 #include <memory>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
+#include <realtime_tools/realtime_publisher.hpp>
+#include <rosidl_runtime_cpp/message_initialization.hpp>
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "pluginlib/class_list_macros.hpp"
+#include "tf2/LinearMath/Quaternion.hpp"
+#include "tf2_ros/transform_broadcaster.h"
 
 namespace agrobot_controller {
 
@@ -24,10 +31,13 @@ static const std::string kWheelRadiusParam = "wheel_radius";
 static const std::string kWheelHubRadiusParam = "wheel_hub_radius";
 static const std::string kPublishRateParam = "publish_rate";
 static const std::string kCmdVelTimeoutParam = "cmd_vel_timeout";
+static const std::string kVelRollingWindowSizeParam =
+    "velocity_rolling_window_size";
+static const std::string kOdometryFrameId = "odom_frame_id";
+static const std::string kBaseFrameId = "base_frame_id";
 
 constexpr auto kVelCmdTopic = "~/cmd_vel";
-//constexpr auto kOdomTopic = "/odom";
-//constexpr auto kTfTopic = "/tf";
+constexpr auto kOdomTopic = "/odom";
 
 constexpr auto kVelHardwareInterfaceType = "velocity";
 constexpr auto kPosHardwareInterfaceType = "position";
@@ -49,10 +59,16 @@ controller_interface::CallbackReturn AgrobotController::on_init() {
     auto_declare<double>(kWheelRadiusParam, params_.wheel_radius);
     auto_declare<double>(kWheelHubRadiusParam, params_.wheel_hub_radius);
 
-    // Node parameters
-    auto_declare<double>(kPublishRateParam, 10.0);
+    // Velocity command subscriber params
     auto_declare<double>(kCmdVelTimeoutParam,
                          cmd_vel_timeout_.count() / 1000.0);
+
+    // Odometry node parameters
+    auto_declare<double>(kPublishRateParam, 10.0);
+    auto_declare<int>(kVelRollingWindowSizeParam, 10);
+    auto_declare<std::string>(kOdometryFrameId, odom_params_.odom_frame_id);
+    auto_declare<std::string>(kBaseFrameId, odom_params_.base_frame_id);
+
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n",
             e.what());
@@ -92,12 +108,23 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
 
     cmd_vel_timeout_ = std::chrono::milliseconds(static_cast<int>(
         node->get_parameter(kCmdVelTimeoutParam).as_double() * 1000.0));
+
+    // Odometry
+    odometry_.setWheelParams(params_.wheel_base, params_.axes_gap,
+                             params_.wheel_radius);
+    odometry_.setVelocityRollingWindowSize(
+        node->get_parameter(kVelRollingWindowSizeParam).as_int());
+
+    odom_params_.odom_frame_id =
+        node->get_parameter(kOdometryFrameId).as_string();
+    odom_params_.base_frame_id = node->get_parameter(kBaseFrameId).as_string();
     publish_rate_ = node->get_parameter(kPublishRateParam).as_double();
     if (publish_rate_ <= 0) {
       RCLCPP_FATAL(logger,
                    "Got publish_rate parameter <= 0. It must be positive");
     }
     publish_period_ = rclcpp::Duration::from_seconds(1.0 / publish_rate_);
+
   } catch (const std::exception& e) {
     RCLCPP_FATAL(logger, "Got error while setting configuration.");
     fprintf(stderr,
@@ -129,6 +156,27 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
                 [&twist_ptr](auto& ptr) { ptr = twist_ptr; });
             previous_timestamp_ = this->get_node()->get_clock()->now();
           });
+
+  odom_transform_broadcaster_ =
+      std::make_shared<tf2_ros::TransformBroadcaster>(this->get_node());
+
+  realtime_odometry_publisher_ = std::make_shared<
+      realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>>(
+      node->create_publisher<nav_msgs::msg::Odometry>(
+          kOdomTopic, rclcpp::SystemDefaultsQoS()));
+
+  auto& odom_message = realtime_odometry_publisher_->msg_;
+  odom_message.header.frame_id = odom_params_.odom_frame_id;
+  odom_message.child_frame_id = odom_params_.base_frame_id;
+  odom_message.twist = geometry_msgs::msg::TwistWithCovariance(
+      rosidl_runtime_cpp::MessageInitialization::ALL);
+
+  constexpr size_t kNumDim = 6;
+  for (size_t idx = 0; idx < 6; ++idx) {
+    const size_t diag_idx = kNumDim * idx + idx;
+    odom_message.pose.covariance[diag_idx] = 0;
+    odom_message.twist.covariance[diag_idx] = 0;
+  }
 
   RCLCPP_INFO(logger, "Configuring done");
   return controller_interface::CallbackReturn::SUCCESS;
@@ -301,6 +349,44 @@ controller_interface::return_type AgrobotController::update(
   }
 
   // Place to do odometry
+  odometry_.update(w[1], w[0], w[2], w[3], time);
+  tr_msg_.header.stamp = time;
+  tr_msg_.header.frame_id = odom_params_.odom_frame_id;
+  tr_msg_.child_frame_id = odom_params_.base_frame_id;
+
+  tr_msg_.transform.translation.x = odometry_.getX();
+  tr_msg_.transform.translation.y = odometry_.getY();
+  tr_msg_.transform.translation.z = 0;
+
+  tf2::Quaternion q;
+  q.setRPY(0, 0, odometry_.getHeading());
+  tr_msg_.transform.rotation.x = q.x();
+  tr_msg_.transform.rotation.y = q.y();
+  tr_msg_.transform.rotation.z = q.z();
+  tr_msg_.transform.rotation.w = q.w();
+
+  if (realtime_odometry_publisher_->trylock()) {
+    auto& odometry_message = realtime_odometry_publisher_->msg_;
+    odometry_message.header.stamp = time;
+
+    auto [vel_x, vel_y] = odometry_.getLinearVel();
+    odometry_message.twist.twist.linear.x = vel_x;
+    odometry_message.twist.twist.linear.y = vel_y;
+    odometry_message.twist.twist.angular.z = odometry_.getAngularVel();
+
+    odometry_message.pose.pose.position.x = odometry_.getX();
+    odometry_message.pose.pose.position.y = odometry_.getY();
+    odometry_message.pose.pose.position.z = 0;
+
+    odometry_message.pose.pose.orientation.x = q.x();
+    odometry_message.pose.pose.orientation.y = q.y();
+    odometry_message.pose.pose.orientation.z = q.z();
+    odometry_message.pose.pose.orientation.w = q.w();
+
+    realtime_odometry_publisher_->unlockAndPublish();
+  }
+
+  odom_transform_broadcaster_->sendTransform(tr_msg_);
 
   const auto r = params_.wheel_radius;
   const auto H = params_.axes_gap;

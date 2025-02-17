@@ -2,7 +2,7 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro" xmlns:gz="http://gazebosim.org/schema">
 
-  <xacro:property name="mu1" value="1.0" />
+  <xacro:property name="mu1" value="10.0" />
   <xacro:property name="mu2" value="0.0" />
 
   <xacro:macro name="mecanum_wheel" params="name parent *origin side">

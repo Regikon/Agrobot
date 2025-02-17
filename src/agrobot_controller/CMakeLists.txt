@@ -16,11 +16,15 @@ find_package(controller_interface REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 add_library(agrobot_controller SHARED
             src/agrobot_controller.cpp
+            src/agrobot_odometry.cpp
 )
 
 target_include_directories(agrobot_controller
@@ -29,7 +33,7 @@ target_include_directories(agrobot_controller
     $<INSTALL_INTERFACE:include>
 )
 
-ament_target_dependencies(agrobot_controller PUBLIC rclcpp rclcpp_lifecycle ros2_control controller_interface hardware_interface realtime_tools pluginlib)
+ament_target_dependencies(agrobot_controller PUBLIC rclcpp rclcpp_lifecycle ros2_control controller_interface hardware_interface realtime_tools pluginlib nav_msgs tf2 tf2_ros)
 pluginlib_export_plugin_description_file(controller_interface agrobot_controller.xml)
 
 install(
