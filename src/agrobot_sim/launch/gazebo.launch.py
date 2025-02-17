@@ -66,13 +66,13 @@ def generate_launch_description():
         arguments=['joint_state_broadcaster']
     )
 
-    joint_trajectory_controller_spawner = Node(
+    agrobot_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=[
-            'joint_trajectory_controller',
             '--param-file',
             robot_controllers,
+            'agrobot_controller',
         ]
     )
 
@@ -107,7 +107,7 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
-                on_exit=[joint_trajectory_controller_spawner],
+                on_exit=[agrobot_controller_spawner],
             )
         ),
         bridge,

@@ -8,6 +8,8 @@
   <license>Apache-2.0</license>
 
   <depend>rviz2</depend>
+  <depend>agrobot_controller</depend>
+  <depend>ros2_control</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

@@ -2,6 +2,9 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
+  <xacro:property name="mu1" value="10" />
+  <xacro:property name="mu2" value="1" />
+
   <xacro:macro name="mecanum_wheel" params="name parent *origin side">
 
     <link name="${name}_link">
@@ -32,6 +35,17 @@
       <child link="${name}_link" />
       <axis xyz="0 0 1" />
     </joint>
+
+    <gazebo reference="${name}_link">
+      <mu1>${mu1}</mu1>
+      <mu2>${mu2}</mu2>
+      <xacro:if value="${side == 'right'}">
+        <fdir1>1 -1 0</fdir1>
+      </xacro:if>
+      <xacro:if value="${side == 'left'}">
+        <fdir1>-1 1 0</fdir1>
+      </xacro:if>
+    </gazebo>
 
   </xacro:macro>
 

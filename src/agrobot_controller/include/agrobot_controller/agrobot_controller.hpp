@@ -3,7 +3,6 @@
 
 #include <controller_interface/controller_interface_base.hpp>
 #include <hardware_interface/loaned_command_interface.hpp>
-#include <queue>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/subscription.hpp>
 #include <string>
@@ -58,9 +57,8 @@ class AgrobotController : public controller_interface::ControllerInterface {
   std::chrono::milliseconds cmd_vel_timeout_{200};
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
       vel_cmd_subscriber_ = nullptr;
-  realtime_tools::RealtimeBox<std::shared_ptr<geometry_msgs::msg::TwistStamped>>
+  realtime_tools::RealtimeBox<geometry_msgs::msg::TwistStamped::SharedPtr>
       last_cmd_vel_message_ptr_{nullptr};
-  std::queue<geometry_msgs::msg::TwistStamped> previous_cmd_commands_;
   bool vel_cmd_subscriber_is_active_ = false;
 
   bool is_halted_ = true;

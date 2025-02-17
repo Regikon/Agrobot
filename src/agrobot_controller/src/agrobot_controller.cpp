@@ -26,8 +26,8 @@ static const std::string kPublishRateParam = "publish_rate";
 static const std::string kCmdVelTimeoutParam = "cmd_vel_timeout";
 
 constexpr auto kVelCmdTopic = "~/cmd_vel";
-constexpr auto kOdomTopic = "/odom";
-constexpr auto kTfTopic = "/tf";
+//constexpr auto kOdomTopic = "/odom";
+//constexpr auto kTfTopic = "/tf";
 
 constexpr auto kVelHardwareInterfaceType = "velocity";
 constexpr auto kPosHardwareInterfaceType = "position";
@@ -98,7 +98,6 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
                    "Got publish_rate parameter <= 0. It must be positive");
     }
     publish_period_ = rclcpp::Duration::from_seconds(1.0 / publish_rate_);
-    previous_timestamp_ = node->get_clock()->now();
   } catch (const std::exception& e) {
     RCLCPP_FATAL(logger, "Got error while setting configuration.");
     fprintf(stderr,
@@ -108,16 +107,16 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
   }
 
   // Configuring vel_cmd subscriber
-  const geometry_msgs::msg::TwistStamped empty_twist;
-  last_cmd_vel_message_ptr_.set(
-      std::make_shared<geometry_msgs::msg::TwistStamped>(empty_twist));
-  previous_cmd_commands_.emplace(empty_twist);
-  previous_cmd_commands_.emplace(empty_twist);
+  last_cmd_vel_message_ptr_.set([](auto& ptr) {
+    const auto empty_twist = geometry_msgs::msg::TwistStamped();
+    ptr = std::make_shared<geometry_msgs::msg::TwistStamped>(empty_twist);
+  });
+  previous_timestamp_ = node->get_clock()->now();
 
   vel_cmd_subscriber_ =
       node->create_subscription<geometry_msgs::msg::TwistStamped>(
           kVelCmdTopic, rclcpp::SystemDefaultsQoS(),
-          [this](const std::shared_ptr<geometry_msgs::msg::TwistStamped> msg)
+          [this](const geometry_msgs::msg::TwistStamped::SharedPtr msg_ptr)
               -> void {
             if (!vel_cmd_subscriber_is_active_) {
               RCLCPP_WARN(this->get_node()->get_logger(),
@@ -125,11 +124,11 @@ controller_interface::CallbackReturn AgrobotController::on_configure(
               return;
             }
 
-            std::shared_ptr<geometry_msgs::msg::TwistStamped> twist;
-            last_cmd_vel_message_ptr_.get(twist);
-            twist = msg;
+            geometry_msgs::msg::TwistStamped::SharedPtr twist_ptr = msg_ptr;
+            last_cmd_vel_message_ptr_.set(
+                [&twist_ptr](auto& ptr) { ptr = twist_ptr; });
+            previous_timestamp_ = this->get_node()->get_clock()->now();
           });
-  previous_timestamp_ = node->get_clock()->now();
 
   RCLCPP_INFO(logger, "Configuring done");
   return controller_interface::CallbackReturn::SUCCESS;
@@ -215,24 +214,24 @@ controller_interface::CallbackReturn AgrobotController::configure_wheel(
       return CallbackReturn::ERROR;
     }
 
-    const auto state_handle = std::find_if(
-        state_interfaces_.cbegin(), state_interfaces_.cend(),
-        [&wheel_name](const auto& interface) {
-          return interface.get_name() == wheel_name &&
-                 interface.get_interface_name() == kVelHardwareInterfaceType;
-        });
+    const auto state_handle =
+        std::find_if(state_interfaces_.cbegin(), state_interfaces_.cend(),
+                     [&wheel_name](const auto& interface) {
+                       return interface.get_name() ==
+                              wheel_name + "/" + kVelHardwareInterfaceType;
+                     });
 
     if (state_handle == state_interfaces_.cend()) {
-      RCLCPP_ERROR(logger, "Unable to obtain joint ");
+      RCLCPP_ERROR(logger, "Unable to obtain joint");
       return CallbackReturn::ERROR;
     }
 
-    const auto command_handle = std::find_if(
-        command_interfaces_.begin(), command_interfaces_.end(),
-        [&wheel_name](const auto& interface) {
-          return interface.get_name() == wheel_name &&
-                 interface.get_interface_name() == kVelHardwareInterfaceType;
-        });
+    const auto command_handle =
+        std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                     [&wheel_name](const auto& interface) {
+                       return interface.get_name() ==
+                              wheel_name + "/" + kVelHardwareInterfaceType;
+                     });
 
     if (command_handle == command_interfaces_.end()) {
       RCLCPP_ERROR(logger, "Unable to obtain joint command handle for %s",
@@ -253,7 +252,7 @@ controller_interface::CallbackReturn AgrobotController::configure_wheel(
 }
 
 controller_interface::return_type AgrobotController::update(
-    const rclcpp::Time& time, const rclcpp::Duration& period) {
+    const rclcpp::Time& time, const rclcpp::Duration&) {
   auto logger = this->get_node()->get_logger();
   const auto current_time = time;
 
@@ -267,7 +266,8 @@ controller_interface::return_type AgrobotController::update(
   }
 
   std::shared_ptr<geometry_msgs::msg::TwistStamped> last_command_msg;
-  last_cmd_vel_message_ptr_.get(last_command_msg);
+  last_cmd_vel_message_ptr_.get(
+      [&last_command_msg](const auto& ptr) { last_command_msg = ptr; });
 
   if (last_command_msg == nullptr) {
     RCLCPP_WARN(logger, "Velocity command message received was a nullptr.");
@@ -293,7 +293,7 @@ controller_interface::return_type AgrobotController::update(
   w[2] = rl_wheel_handle_->velocity_feedback.get().get_value();
   w[3] = rr_wheel_handle_->velocity_feedback.get().get_value();
 
-  for (int i = 0; i != w.size(); ++i) {
+  for (size_t i = 0; i < w.size(); ++i) {
     if (std::isnan(w[i])) {
       RCLCPP_ERROR(logger, "One of the wheel values is invalid.");
       return controller_interface::return_type::ERROR;
@@ -306,10 +306,12 @@ controller_interface::return_type AgrobotController::update(
   const auto H = params_.axes_gap;
   const auto B = params_.wheel_base;
 
-  w[0] = 1 / r * (v_x - v_y) + (H - B) / 2 * w_z;
-  w[1] = 1 / r * (v_x + v_y) + (H + B) / 2 * w_z;
-  w[2] = 1 / r * (v_x + v_y) - (H - B) / 2 * w_z;
-  w[3] = 1 / r * (v_x - v_y) - (H + B) / 2 * w_z;
+  w[0] = 1 / r * (v_x + v_y + (H + B) / 2 * w_z);
+  w[1] = 1 / r * (v_x - v_y - (H + B) / 2 * w_z);
+  w[2] = 1 / r * (v_x + v_y - (H + B) / 2 * w_z);
+  w[3] = 1 / r * (v_x - v_y + (H + B) / 2 * w_z);
+  // RCLCPP_INFO(logger, "Setting control values: (%.2f, %.2f, %.2f, %.2f)", w[0],
+  //             w[1], w[2], w[3]);
 
   if (!fr_wheel_handle_->velocity_cmd.get().set_value(w[0]) ||
       !fl_wheel_handle_->velocity_cmd.get().set_value(w[1]) ||
