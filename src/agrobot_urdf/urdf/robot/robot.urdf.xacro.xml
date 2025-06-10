@@ -5,6 +5,7 @@
   <xacro:include filename="$(find agrobot_urdf)/urdf/mecanum_wheel/mecanum_wheel.urdf.xacro.xml" />
   <xacro:include
     filename="$(find agrobot_urdf)/urdf/rail_wheel/rail_wheel.urdf.xacro.xml" />
+  <xacro:include filename="$(find agrobot_urdf)/urdf/camera/camera.urdf.xacro.xml" />
 
   <xacro:include filename="$(find agrobot_urdf)/urdf/robot/robot.ros2_control.urdf.xacro.xml" />
 
@@ -66,7 +67,28 @@
     <origin xyz="0 0 ${-wheel_base_length}" />
   </xacro:rail_wheel>
 
+  <xacro:camera name="center_camera" parent="base_link">
+    <origin xyz="${mecanum_wheel_base_x} 0 0.35" />
+  </xacro:camera>
+
+  <xacro:camera name="left_camera" parent="base_link">
+    <origin xyz="0 ${-mecanum_wheel_base_y} 0.35" rpy="0 0 ${-pi/2}" />
+  </xacro:camera>
+
+  <xacro:camera name="right_camera" parent="base_link">
+    <origin xyz="0 ${mecanum_wheel_base_y} 0.35" rpy="0 0 ${pi/2}" />
+  </xacro:camera>
+
   <!-- ROS2 CONTROL -->
   <xacro:robot_ros2_control />
+
+
+  <gazebo>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+  </gazebo>
 
 </robot>

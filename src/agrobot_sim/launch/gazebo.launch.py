@@ -27,6 +27,14 @@ def generate_launch_description():
                                value=[LaunchConfiguration('world'), 
                                       TextSubstitution(text='.sdf.xml')])
 
+    bridge_config = PathJoinSubstitution(
+        [
+            pkg_agrobot_sim,
+            'config',
+            'bridge_config.yaml'
+        ]
+    )
+
     # Getting urdf via xacro
     robot_description_content = Command(
         [
@@ -80,7 +88,11 @@ def generate_launch_description():
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        parameters=[
+            {
+                'config_file': bridge_config
+            }
+        ],
         output='screen'
     )
     
