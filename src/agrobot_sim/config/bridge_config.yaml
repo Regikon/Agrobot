@@ -86,3 +86,13 @@
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
+
+- gz_topic_name: "/world/mini_greenhouse/pose/info"
+  ros_topic_name: "/gazebo/ground_truth/pose"
+  gz_type_name: "gz.msgs.Pose_V"
+  ros_type_name: "geometry_msgs/msg/PoseArray"
+
+- gz_topic_name: "/world/empty/pose/info"
+  ros_topic_name: "/gazebo/ground_truth/pose"
+  gz_type_name: "gz.msgs.Pose_V"
+  ros_type_name: "geometry_msgs/msg/PoseArray"

@@ -24,9 +24,9 @@ void AgrobotOdometry::update(double fl_vel, double fr_vel, double rl_vel,
   std::array<double, 4> w{fr_vel, fl_vel, rl_vel, rr_vel};
 
   const double lin_vel_x = wheel_radius_ / 4 * (w[0] + w[1] + w[2] + w[3]);
-  const double lin_vel_y = wheel_radius_ / 4 * (w[0] - w[1] + w[2] - w[3]);
+  const double lin_vel_y = wheel_radius_ / 4 * (-w[0] + w[1] + w[2] - w[3]);
   const double ang_vel_z = wheel_radius_ / (wheel_base_ + axes_gap_) *
-                           (w[0] - w[1] - w[2] + w[3]) / 4 / M_PI;
+                           -(w[0] - w[1] + w[2] - w[3]) / 2;
 
   timestamp_ = time;
 
@@ -42,16 +42,14 @@ void AgrobotOdometry::update(double fl_vel, double fr_vel, double rl_vel,
 }
 
 void AgrobotOdometry::resetAccumulators() {
-  for (size_t i = 0; i < velocity_rolling_window_size_; ++i) {
-    vel_x_accumulator_.accumulate(0);
-    vel_y_accumulator_.accumulate(0);
-    angular_vel_accumulator_.accumulate(0);
-  }
+  vel_x_accumulator_ = AgrobotOdometry::RollingMeanAccumulator(velocity_rolling_window_size_);
+  vel_y_accumulator_ = AgrobotOdometry::RollingMeanAccumulator(velocity_rolling_window_size_);
+  angular_vel_accumulator_ = AgrobotOdometry::RollingMeanAccumulator(velocity_rolling_window_size_);
 }
 
 void AgrobotOdometry::integratePosition(const rclcpp::Duration& dt) {
-  x_ += vel_x_ * dt.seconds();
-  y_ += vel_y_ * dt.seconds();
+  x_ += (vel_x_ * cos(heading_) - vel_y_ * sin(heading_)) * dt.seconds();
+  y_ += (vel_x_ * sin(heading_) + vel_y_ * cos(heading_)) * dt.seconds();
   heading_ += angular_vel_ * dt.seconds();
 }
 

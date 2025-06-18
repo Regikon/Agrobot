@@ -34,7 +34,7 @@
 			<sensor name="${name}" type="rgbd_camera">
 				<always_on>true</always_on>
 				<visualize>true</visualize>
-				<update_rate>30.0</update_rate>
+				<update_rate>1.0</update_rate>
 				<topic>${name}</topic>
 				<frame_id>${name}_link</frame_id>
 				<camera>

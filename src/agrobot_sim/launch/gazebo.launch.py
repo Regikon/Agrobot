@@ -11,6 +11,8 @@ def generate_launch_description():
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     pkg_agrobot_sim = get_package_share_directory('agrobot_sim')
     pkg_agrobot_urdf = get_package_share_directory('agrobot_urdf')
+    pkg_slam_toolbox = get_package_share_directory('slam_toolbox')
+
     gz_launch_path = PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
     world_model_path = PathJoinSubstitution([pkg_agrobot_sim])
     robot_urdf_path = PathJoinSubstitution([pkg_agrobot_urdf, 'urdf', 'robot', 'robot.urdf.xacro.xml'])
@@ -26,6 +28,22 @@ def generate_launch_description():
     world_file_arg_substitution = SetLaunchConfiguration(name='world_file', 
                                value=[LaunchConfiguration('world'), 
                                       TextSubstitution(text='.sdf.xml')])
+
+    nav_config = PathJoinSubstitution(
+        [
+            pkg_agrobot_sim,
+            'config',
+            'nav_config.yaml'
+        ]
+    )
+
+    slam_launch_path = PathJoinSubstitution(
+        [
+            pkg_slam_toolbox,
+            'launch',
+            'online_async_launch.py'
+        ]
+    )
 
     bridge_config = PathJoinSubstitution(
         [
@@ -95,6 +113,14 @@ def generate_launch_description():
         ],
         output='screen'
     )
+
+    nav = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(slam_launch_path),
+        launch_arguments={
+            'use_sim_time': 'true',
+            'slam_params_file': nav_config,
+        }.items()
+    )
     
     gz_sim_env = SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', world_model_path)
 
@@ -122,6 +148,7 @@ def generate_launch_description():
                 on_exit=[agrobot_controller_spawner],
             )
         ),
+        nav,
         bridge,
         node_robot_state_publisher,
         gz_spawn_entity,

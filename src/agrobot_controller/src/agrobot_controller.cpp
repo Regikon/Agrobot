@@ -336,10 +336,10 @@ controller_interface::return_type AgrobotController::update(
   auto w_z = command.twist.angular.z;
 
   std::array<double, 4> w;
-  w[0] = fr_wheel_handle_->velocity_feedback.get().get_value();
-  w[1] = fl_wheel_handle_->velocity_feedback.get().get_value();
-  w[2] = rl_wheel_handle_->velocity_feedback.get().get_value();
-  w[3] = rr_wheel_handle_->velocity_feedback.get().get_value();
+  w[0] = fr_wheel_handle_->velocity_feedback.get().get_value() / 7.15;
+  w[1] = fl_wheel_handle_->velocity_feedback.get().get_value() / 7.15;
+  w[2] = rl_wheel_handle_->velocity_feedback.get().get_value() / 7.15;
+  w[3] = rr_wheel_handle_->velocity_feedback.get().get_value() / 7.15;
 
   for (size_t i = 0; i < w.size(); ++i) {
     if (std::isnan(w[i])) {
@@ -349,7 +349,7 @@ controller_interface::return_type AgrobotController::update(
   }
 
   // Place to do odometry
-  odometry_.update(w[1], w[0], w[2], w[3], time);
+  odometry_.update(w[0], w[1], w[2], w[3], time);
   tr_msg_.header.stamp = time;
   tr_msg_.header.frame_id = odom_params_.odom_frame_id;
   tr_msg_.child_frame_id = odom_params_.base_frame_id;
@@ -399,10 +399,10 @@ controller_interface::return_type AgrobotController::update(
   // RCLCPP_INFO(logger, "Setting control values: (%.2f, %.2f, %.2f, %.2f)", w[0],
   //             w[1], w[2], w[3]);
 
-  if (!fr_wheel_handle_->velocity_cmd.get().set_value(w[0]) ||
-      !fl_wheel_handle_->velocity_cmd.get().set_value(w[1]) ||
-      !rl_wheel_handle_->velocity_cmd.get().set_value(w[2]) ||
-      !rr_wheel_handle_->velocity_cmd.get().set_value(w[3])) {
+  if (!fr_wheel_handle_->velocity_cmd.get().set_value(w[0] * 7.15) ||
+      !fl_wheel_handle_->velocity_cmd.get().set_value(w[1] * 7.15) ||
+      !rl_wheel_handle_->velocity_cmd.get().set_value(w[2] * 7.15) ||
+      !rr_wheel_handle_->velocity_cmd.get().set_value(w[3] * 7.15)) {
     RCLCPP_ERROR(logger,
                  "failed when tried to write to wheel command interfaces");
     return controller_interface::return_type::ERROR;
