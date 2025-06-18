@@ -6,6 +6,7 @@
   <xacro:include
     filename="$(find agrobot_urdf)/urdf/rail_wheel/rail_wheel.urdf.xacro.xml" />
   <xacro:include filename="$(find agrobot_urdf)/urdf/camera/camera.urdf.xacro.xml" />
+  <xacro:include filename="$(find agrobot_urdf)/urdf/radar/radar.urdf.xacro.xml" />
 
   <xacro:include filename="$(find agrobot_urdf)/urdf/robot/robot.ros2_control.urdf.xacro.xml" />
 
@@ -78,6 +79,10 @@
   <xacro:camera name="right_camera" parent="base_link">
     <origin xyz="0 ${mecanum_wheel_base_y} 0.35" rpy="0 0 ${pi/2}" />
   </xacro:camera>
+
+  <xacro:radar name="radar" parent="base_link">
+    <origin xyz="0 0 0.4" rpy="0 0 0" />
+  </xacro:radar>
 
   <!-- ROS2 CONTROL -->
   <xacro:robot_ros2_control />

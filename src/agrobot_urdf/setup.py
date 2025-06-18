@@ -13,6 +13,7 @@ data_files = [
     (os.path.join("share", package_name, "urdf", "mecanum_wheel"), glob("urdf/mecanum_wheel/*")),
     (os.path.join("share", package_name, "urdf", "robot"), glob("urdf/robot/*")),
     (os.path.join("share", package_name, "urdf", "camera"), glob("urdf/camera/*")),
+    (os.path.join("share", package_name, "urdf", "radar"), glob("urdf/radar/*")),
     (os.path.join("share", package_name, "meshes", "robot_body"), glob("meshes/robot_body/*")),
     (os.path.join("share", package_name, "meshes", "mecanum_wheel"), glob("meshes/mecanum_wheel/*")),
     (os.path.join("share", package_name, "meshes", "rail_wheel"), glob("meshes/rail_wheel/*")),
