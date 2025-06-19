@@ -41,7 +41,7 @@ def generate_launch_description():
         [
             pkg_slam_toolbox,
             'launch',
-            'online_async_launch.py'
+            'online_sync_launch.py'
         ]
     )
 

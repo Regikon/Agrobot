@@ -19,7 +19,7 @@ agrobot_controller:
     axes_gap: 0.640 # m
     wheel_radius: 0.1 # m
     wheel_hub_radius: 0.0095 # m
-    publish_rate: 100.0 # Hz
+    publish_rate: 20.0 # Hz
     cmd_vel_timeout: 10000.0 # ms
     velocity_rolling_window_size: 5
     base_frame_id: base_footprint
